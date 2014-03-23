@@ -1,5 +1,5 @@
 ParseImageUploader
 ==================
 
-ImageUploader sample using "Parse"
-https://parse.com/
+ImageUploader sample using "Parse"  
+Parse: https://parse.com/
