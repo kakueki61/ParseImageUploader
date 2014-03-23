@@ -2,4 +2,6 @@
 <resources>
     <string name="hello">Hello World, ParseStarterProjectActivity!</string>
     <string name="app_name">ParseStarterProject</string>
+    <string name="button_upload">Upload</string>
+    <string name="button_fetch">Fetch</string>
 </resources>
