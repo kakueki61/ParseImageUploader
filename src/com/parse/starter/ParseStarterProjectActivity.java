@@ -33,11 +33,15 @@ public class ParseStarterProjectActivity extends Activity {
             public void onClick(View view) {
                 LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 final View dialogView = inflater.inflate(R.layout.dialog_input_text, null);
+
+                final ParseObject editTextObject = new ParseObject("EditText");
                 DialogUtils.showLayoutDialog(ParseStarterProjectActivity.this, dialogView, new IEditTextListener() {
                     @Override
                     public void onIputFinish(View view) {
                         EditText editText = (EditText) view.findViewById(R.id.edit_text);
                         String input = editText.getText().toString();
+                        editTextObject.put("input", input);
+                        editTextObject.saveInBackground();
                         Log.d("ImageUploader", input);
                     }
                 });
