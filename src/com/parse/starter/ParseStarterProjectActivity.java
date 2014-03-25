@@ -47,6 +47,7 @@ public class ParseStarterProjectActivity extends Activity {
                 });
             }
         });
+
         findViewById(R.id.button_fetch).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -61,6 +62,13 @@ public class ParseStarterProjectActivity extends Activity {
                         }
                     }
                 });
+            }
+        });
+
+        findViewById(R.id.button_upload_images).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
             }
         });
     }
