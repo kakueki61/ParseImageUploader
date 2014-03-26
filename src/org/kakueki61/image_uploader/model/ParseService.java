@@ -40,6 +40,7 @@ public class ParseService {
         parseFile.saveInBackground();
 
         this.parseObject.put("imageFile", parseFile);
+        this.parseObject.put("imageSize", bytes.length);
         this.parseObject.saveInBackground();
     }
 }

@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 import com.parse.*;
 import org.kakueki61.image_uploader.listener.IEditTextListener;
@@ -110,6 +111,43 @@ public class ParseStarterProjectActivity extends Activity {
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(intent, 1111);
+            }
+        });
+
+        findViewById(R.id.button_fetch_images).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery(IMAGE_PARSE_OBJECT_NAME);
+                parseQuery.findInBackground(new FindCallback<ParseObject>() {
+                    @Override
+                    public void done(List<ParseObject> parseObjects, ParseException e) {
+                        for(int i = 0; i < parseObjects.size(); i++) {
+
+                        }
+                        ParseFile imageParseFile = (ParseFile) parseObjects.get(1).get("imageFile");
+                        imageParseFile.getDataInBackground(
+                            new GetDataCallback() {
+                                @Override
+                                public void done(byte[] bytes, ParseException e) {
+                                    if(e == null) {
+                                        Log.d(TAG, "callback without ParseException");
+                                        Log.i(TAG, "byte size: " + bytes.length);
+                                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                        ((ImageView)findViewById(R.id.imageView)).setImageBitmap(bitmap);
+                                    } else {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            },
+                            new ProgressCallback() {
+                                @Override
+                                public void done(Integer integer) {
+                                    Log.i(TAG, "progress: " + integer);
+                                }
+                            }
+                        );
+                    }
+                });
             }
         });
     }
