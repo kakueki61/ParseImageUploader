@@ -14,8 +14,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 import com.parse.*;
 import org.kakueki61.image_uploader.listener.IEditTextListener;
+import org.kakueki61.image_uploader.model.ParseService;
 import org.kakueki61.image_uploader.utils.DialogUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -27,6 +29,7 @@ import java.util.List;
 public class ParseStarterProjectActivity extends Activity {
     private static final String TAG = ParseStarterProjectActivity.class.getSimpleName();
     private static final String PARSE_OBJECT_NAME = "EditText";
+    private static final String IMAGE_PARSE_OBJECT_NAME = "ImageParseObject";
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,15 +47,14 @@ public class ParseStarterProjectActivity extends Activity {
                 LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 final View dialogView = inflater.inflate(R.layout.dialog_input_text, null);
 
-                final ParseObject editTextObject = new ParseObject(PARSE_OBJECT_NAME);
                 DialogUtils.showLayoutDialog(ParseStarterProjectActivity.this, dialogView, new IEditTextListener() {
                     @Override
                     public void onIputFinish(View view) {
                         EditText editText = (EditText) view.findViewById(R.id.edit_text);
                         String input = editText.getText().toString();
-                        editTextObject.put("input", input);
-                        editTextObject.saveInBackground();
-                        Log.d(TAG, input);
+
+                        ParseService editTextParseService = new ParseService(PARSE_OBJECT_NAME);
+                        editTextParseService.saveData("input", input);
                     }
                 });
             }
@@ -113,29 +115,31 @@ public class ParseStarterProjectActivity extends Activity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         if(requestCode == 1111 && resultCode == RESULT_OK) {
-            try {
-                InputStream is = getContentResolver().openInputStream(data.getData());
-                Bitmap bitmap = BitmapFactory.decodeStream(is);
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            final View dialogView = inflater.inflate(R.layout.dialog_input_text, null);
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                byte[] bytes = baos.toByteArray();
+            DialogUtils.showLayoutDialog(ParseStarterProjectActivity.this, dialogView, new IEditTextListener() {
+                @Override
+                public void onIputFinish(View view) {
+                    EditText editText = (EditText) view.findViewById(R.id.edit_text);
+                    String input = editText.getText().toString();
 
-                ParseFile parseFile = new ParseFile("test_image.jpg", bytes);
+                    InputStream is = null;
+                    try {
+                        is = getContentResolver().openInputStream(data.getData());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
 
-                Log.d(TAG, "upload an image");
-                parseFile.saveInBackground();
-                Log.d(TAG, "finish to upload");
+                    ParseService imageParseService = new ParseService(IMAGE_PARSE_OBJECT_NAME);
+                    imageParseService.saveData(input, bitmap);
 
-                ParseObject imageParseObject = new ParseObject("ImageObject");
-                imageParseObject.put("img_binary", parseFile);
-                imageParseObject.saveInBackground();
-                Log.d(TAG, "finish");
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+                    Toast.makeText(getApplicationContext(), "Image Uploading...", Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 }
