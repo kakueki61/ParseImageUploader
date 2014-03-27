@@ -28,7 +28,23 @@ public class BitmapDecodeLoader extends AsyncTaskLoader<Bitmap> {
     @Override
     public Bitmap loadInBackground() {
         Log.d(TAG, "loadInBackground");
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapByteArray, 0, bitmapByteArray.length);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+
+        options.inJustDecodeBounds = true;
+
+        BitmapFactory.decodeByteArray(bitmapByteArray, 0, bitmapByteArray.length, options);
+
+        int imageHeight = options.outHeight;
+        int imageWidth = options.outWidth;
+        String imageType = options.outMimeType;
+        Log.i(TAG, "height: " + imageHeight + ", width: " + imageWidth + ", MimeType: " + imageType);
+
+        options.inSampleSize = ImageUtils.calcInSampleSize(imageHeight, imageWidth);
+
+        options.inJustDecodeBounds = false;
+
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapByteArray, 0, bitmapByteArray.length, options);
         return bitmap;
     }
 
