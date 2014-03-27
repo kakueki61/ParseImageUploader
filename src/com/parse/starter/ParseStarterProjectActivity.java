@@ -1,16 +1,10 @@
 package com.parse.starter;
 
-import android.app.Activity;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -19,19 +13,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-import com.parse.*;
+import com.parse.ParseAnalytics;
+import org.kakueki61.image_uploader.api.ParseQueryApiService;
 import org.kakueki61.image_uploader.listener.IEditTextListener;
+import org.kakueki61.image_uploader.listener.IRetrieveParseFileListener;
 import org.kakueki61.image_uploader.model.ParseService;
 import org.kakueki61.image_uploader.utils.BitmapDecodeLoader;
 import org.kakueki61.image_uploader.utils.DialogUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 public class ParseStarterProjectActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Bitmap> {
     private static final String TAG = ParseStarterProjectActivity.class.getSimpleName();
@@ -84,34 +76,22 @@ public class ParseStarterProjectActivity extends FragmentActivity implements Loa
         findViewById(R.id.button_fetch_images).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery(IMAGE_PARSE_OBJECT_NAME);
-                parseQuery.findInBackground(new FindCallback<ParseObject>() {
+                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                final View dialogView = inflater.inflate(R.layout.dialog_input_text, null);
+                DialogUtils.showLayoutDialog(ParseStarterProjectActivity.this, dialogView, new IEditTextListener() {
                     @Override
-                    public void done(List<ParseObject> parseObjects, ParseException e) {
-                        String pass = parseObjects.get(0).getString("password");
-                        ((TextView) findViewById(R.id.textView)).setText(pass);
-                        ParseFile imageParseFile = (ParseFile) parseObjects.get(0).get("imageFile");
-                        imageParseFile.getDataInBackground(
-                            new GetDataCallback() {
-                                @Override
-                                public void done(byte[] bytes, ParseException e) {
-                                    if(e == null) {
-                                        Log.i(TAG, "byte size: " + bytes.length);
-                                        Bundle bundle = new Bundle();
-                                        bundle.putByteArray(BUNDLE_BYTES_KEY, bytes);
-                                        getSupportLoaderManager().initLoader(0, bundle, ParseStarterProjectActivity.this);
-                                    } else {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            },
-                            new ProgressCallback() {
-                                @Override
-                                public void done(Integer integer) {
-                                    Log.i(TAG, "progress: " + integer);
-                                }
+                    public void onIputFinish(View view) {
+                        EditText editText = (EditText) view.findViewById(R.id.edit_text);
+                        String password = editText.getText().toString();
+                        ParseQueryApiService.getParseFile(IMAGE_PARSE_OBJECT_NAME, password, new IRetrieveParseFileListener() {
+                            @Override
+                            public void onFinished(byte[] bytes) {
+                                Log.i(TAG, "byte size: " + bytes.length);
+                                Bundle bundle = new Bundle();
+                                bundle.putByteArray(BUNDLE_BYTES_KEY, bytes);
+                                getSupportLoaderManager().initLoader(0, bundle, ParseStarterProjectActivity.this);
                             }
-                        );
+                        });
                     }
                 });
             }
@@ -159,7 +139,9 @@ public class ParseStarterProjectActivity extends FragmentActivity implements Loa
     @Override
     public void onLoadFinished(Loader<Bitmap> bitmapLoader, Bitmap bitmap) {
         Log.d(TAG, "onLoadFinished");
-        ((ImageView) findViewById(R.id.imageView)).setImageBitmap(bitmap);
+        ImageView imageView = (ImageView) findViewById(R.id.imageView);
+        imageView.setImageBitmap(null);
+        imageView.setImageBitmap(bitmap);
     }
 
     @Override
