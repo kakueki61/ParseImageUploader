@@ -45,46 +45,6 @@ public class ParseStarterProjectActivity extends FragmentActivity implements Loa
 
         ParseAnalytics.trackAppOpened(getIntent());
 
-        ParseObject testObject = new ParseObject("TestObject");
-        testObject.put("foo", "bar");
-        testObject.saveInBackground();
-
-        findViewById(R.id.button_upload).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                final View dialogView = inflater.inflate(R.layout.dialog_input_text, null);
-
-                DialogUtils.showLayoutDialog(ParseStarterProjectActivity.this, dialogView, new IEditTextListener() {
-                    @Override
-                    public void onIputFinish(View view) {
-                        EditText editText = (EditText) view.findViewById(R.id.edit_text);
-                        String input = editText.getText().toString();
-
-                        ParseService editTextParseService = new ParseService(PARSE_OBJECT_NAME);
-                        editTextParseService.saveData("input", input);
-                    }
-                });
-            }
-        });
-
-        findViewById(R.id.button_fetch).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery(PARSE_OBJECT_NAME);
-                parseQuery.findInBackground(new FindCallback<ParseObject>() {
-                    @Override
-                    public void done(List<ParseObject> parseObjects, ParseException e) {
-                        for (int i = 0; i < parseObjects.size(); i++) {
-                            Log.d(TAG, parseObjects.get(i).getObjectId());
-                            Log.d(TAG, parseObjects.get(i).getCreatedAt().toString());
-                            Log.d(TAG, parseObjects.get(i).getString("input"));
-                        }
-                    }
-                });
-            }
-        });
-
         findViewById(R.id.button_upload_images).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
