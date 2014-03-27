@@ -31,14 +31,15 @@ public class ParseService {
         this.parseObject.saveInBackground();
     }
 
-    public void saveData(String key, Bitmap bitmap) {
+    public void saveData(String pass, Bitmap bitmap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] bytes = baos.toByteArray();
 
-        ParseFile parseFile = new ParseFile(key + ".jpg", bytes);
+        ParseFile parseFile = new ParseFile("image.jpg", bytes);
         parseFile.saveInBackground();
 
+        this.parseObject.put("password", pass);
         this.parseObject.put("imageFile", parseFile);
         this.parseObject.put("imageSize", bytes.length);
         this.parseObject.saveInBackground();
