@@ -7,17 +7,24 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.parse.*;
 import org.kakueki61.image_uploader.listener.IEditTextListener;
 import org.kakueki61.image_uploader.model.ParseService;
+import org.kakueki61.image_uploader.utils.BitmapDecodeLoader;
 import org.kakueki61.image_uploader.utils.DialogUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -26,10 +33,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-public class ParseStarterProjectActivity extends Activity {
+public class ParseStarterProjectActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Bitmap> {
     private static final String TAG = ParseStarterProjectActivity.class.getSimpleName();
     private static final String PARSE_OBJECT_NAME = "EditText";
     private static final String IMAGE_PARSE_OBJECT_NAME = "ImageParseObject";
+    private static final String BUNDLE_BYTES_KEY = "byteArray";
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,7 +75,7 @@ public class ParseStarterProjectActivity extends Activity {
                 parseQuery.findInBackground(new FindCallback<ParseObject>() {
                     @Override
                     public void done(List<ParseObject> parseObjects, ParseException e) {
-                        for(int i = 0; i < parseObjects.size(); i++) {
+                        for (int i = 0; i < parseObjects.size(); i++) {
                             Log.d(TAG, parseObjects.get(i).getObjectId());
                             Log.d(TAG, parseObjects.get(i).getCreatedAt().toString());
                             Log.d(TAG, parseObjects.get(i).getString("input"));
@@ -112,6 +120,42 @@ public class ParseStarterProjectActivity extends Activity {
                 startActivityForResult(intent, 1111);
             }
         });
+
+        findViewById(R.id.button_fetch_images).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery(IMAGE_PARSE_OBJECT_NAME);
+                parseQuery.findInBackground(new FindCallback<ParseObject>() {
+                    @Override
+                    public void done(List<ParseObject> parseObjects, ParseException e) {
+                        String pass = parseObjects.get(0).getString("password");
+                        ((TextView) findViewById(R.id.textView)).setText(pass);
+                        ParseFile imageParseFile = (ParseFile) parseObjects.get(0).get("imageFile");
+                        imageParseFile.getDataInBackground(
+                            new GetDataCallback() {
+                                @Override
+                                public void done(byte[] bytes, ParseException e) {
+                                    if(e == null) {
+                                        Log.i(TAG, "byte size: " + bytes.length);
+                                        Bundle bundle = new Bundle();
+                                        bundle.putByteArray(BUNDLE_BYTES_KEY, bytes);
+                                        getSupportLoaderManager().initLoader(0, bundle, ParseStarterProjectActivity.this);
+                                    } else {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            },
+                            new ProgressCallback() {
+                                @Override
+                                public void done(Integer integer) {
+                                    Log.i(TAG, "progress: " + integer);
+                                }
+                            }
+                        );
+                    }
+                });
+            }
+        });
     }
 
     @Override
@@ -141,5 +185,25 @@ public class ParseStarterProjectActivity extends Activity {
                 }
             });
         }
+    }
+
+    @Override
+    public Loader<Bitmap> onCreateLoader(int i, Bundle bundle) {
+        Log.d(TAG, "onCreateLoader");
+        BitmapDecodeLoader bitmapDecodeLoader
+                = new BitmapDecodeLoader(getApplicationContext(), bundle.getByteArray(BUNDLE_BYTES_KEY));
+        bitmapDecodeLoader.forceLoad();
+        return bitmapDecodeLoader;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Bitmap> bitmapLoader, Bitmap bitmap) {
+        Log.d(TAG, "onLoadFinished");
+        ((ImageView) findViewById(R.id.imageView)).setImageBitmap(bitmap);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Bitmap> bitmapLoader) {
+        //TODO
     }
 }
